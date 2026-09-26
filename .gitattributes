@@ -1,0 +1,15 @@
+# Large NVIDIA runtime binaries are tracked with Git LFS. The pointer files
+# live in this GitHub repository; the real objects are stored on Hugging Face
+# (see .lfsconfig). A clone without `git lfs pull` contains only tiny pointers.
+bin/runtime/host/nvngx_dlssnr.dll filter=lfs diff=lfs merge=lfs -text
+bin/runtime/host/dxgi.dll filter=lfs diff=lfs merge=lfs -text
+bin/runtime/host/renodx-dlss5.addon64 filter=lfs diff=lfs merge=lfs -text
+bin/runtime/dlss/nvngx_dlss.dll filter=lfs diff=lfs merge=lfs -text
+bin/runtime/dlssg/nvngx_dlssg.dll filter=lfs diff=lfs merge=lfs -text
+bin/runtime/host-linux/dxgi.dll filter=lfs diff=lfs merge=lfs -text
+
+# Small runtime binaries (nvngx.dll, dlssg-worker.exe) are committed directly
+# in this repository; they are too small to need LFS.
+
+# NVIDIA license texts contain deliberately odd whitespace; keep them as-is.
+bin/runtime/**/LICENSE-*.txt -whitespace

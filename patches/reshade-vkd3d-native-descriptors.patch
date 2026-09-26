@@ -1,0 +1,80 @@
+diff --git a/source/d3d12/d3d12_extensions.cpp b/source/d3d12/d3d12_extensions.cpp
+index 4f1296f..42c229e 100644
+--- a/source/d3d12/d3d12_extensions.cpp
++++ b/source/d3d12/d3d12_extensions.cpp
+@@ -18,8 +18,8 @@ HRESULT ID3D12DeviceExt_GetCudaTextureObject(IUnknown *device_ext, D3D12_CPU_DES
+ 
+ 	if (const auto device_proxy = get_private_pointer_d3dx<D3D12Device>(device.get()))
+ 	{
+-		srv_handle = device_proxy->convert_to_original_cpu_descriptor_handle(srv_handle);
+-		sampler_handle = device_proxy->convert_to_original_cpu_descriptor_handle(sampler_handle);
++		srv_handle = device_proxy->convert_to_original_cpu_descriptor_handle(srv_handle, true);
++		sampler_handle = device_proxy->convert_to_original_cpu_descriptor_handle(sampler_handle, true);
+ 	}
+ 
+ 	return reshade::hooks::call(ID3D12DeviceExt_GetCudaTextureObject, reshade::hooks::vtable_from_instance(device_ext) + 7)(device_ext, srv_handle, sampler_handle, cuda_texture_handle);
+@@ -33,7 +33,7 @@ HRESULT ID3D12DeviceExt_GetCudaSurfaceObject(IUnknown *device_ext, D3D12_CPU_DES
+ 
+ 	if (const auto device_proxy = get_private_pointer_d3dx<D3D12Device>(device.get()))
+ 	{
+-		uav_handle = device_proxy->convert_to_original_cpu_descriptor_handle(uav_handle);
++		uav_handle = device_proxy->convert_to_original_cpu_descriptor_handle(uav_handle, true);
+ 	}
+ 
+ 	return reshade::hooks::call(ID3D12DeviceExt_GetCudaSurfaceObject, reshade::hooks::vtable_from_instance(device_ext) + 8)(device_ext, uav_handle, cuda_surface_handle);
+@@ -47,8 +47,8 @@ HRESULT ID3D12DeviceExt2_GetCudaMergedTextureSamplerObject(IUnknown *device_ext,
+ 
+ 	if (const auto device_proxy = get_private_pointer_d3dx<D3D12Device>(device.get()))
+ 	{
+-		params->texDesc = device_proxy->convert_to_original_cpu_descriptor_handle(params->texDesc);
+-		params->smpDesc = device_proxy->convert_to_original_cpu_descriptor_handle(params->smpDesc);
++		params->texDesc = device_proxy->convert_to_original_cpu_descriptor_handle(params->texDesc, true);
++		params->smpDesc = device_proxy->convert_to_original_cpu_descriptor_handle(params->smpDesc, true);
+ 	}
+ 
+ 	return reshade::hooks::call(ID3D12DeviceExt2_GetCudaMergedTextureSamplerObject, reshade::hooks::vtable_from_instance(device_ext) + 14)(device_ext, params);
+@@ -62,7 +62,7 @@ HRESULT ID3D12DeviceExt2_GetCudaIndependentDescriptorObject(IUnknown *device_ext
+ 
+ 	if (const auto device_proxy = get_private_pointer_d3dx<D3D12Device>(device.get()))
+ 	{
+-		params->desc = device_proxy->convert_to_original_cpu_descriptor_handle(params->desc);
++		params->desc = device_proxy->convert_to_original_cpu_descriptor_handle(params->desc, true);
+ 	}
+ 
+ 	return reshade::hooks::call(ID3D12DeviceExt2_GetCudaIndependentDescriptorObject, reshade::hooks::vtable_from_instance(device_ext) + 15)(device_ext, params);
+diff --git a/source/d3d12/d3d12_impl_device.cpp b/source/d3d12/d3d12_impl_device.cpp
+index b1bbfc0..54c318c 100644
+--- a/source/d3d12/d3d12_impl_device.cpp
++++ b/source/d3d12/d3d12_impl_device.cpp
+@@ -2322,9 +2322,17 @@ void D3D12DescriptorHeap::initialize_descriptor_base_handle(size_t heap_index)
+ #endif
+ 
+ #if RESHADE_ADDON >= 2
+-D3D12_CPU_DESCRIPTOR_HANDLE reshade::d3d12::device_impl::convert_to_original_cpu_descriptor_handle(D3D12_CPU_DESCRIPTOR_HANDLE handle) const
++D3D12_CPU_DESCRIPTOR_HANDLE reshade::d3d12::device_impl::convert_to_original_cpu_descriptor_handle(D3D12_CPU_DESCRIPTOR_HANDLE handle, bool allow_original) const
+ {
+ 	const size_t heap_index = (handle.ptr >> heap_index_start) & 0xFFFFFFF;
++	// VKD3D extension vtables are shared by wrapped and original devices.
++	// RenoDX can call them with descriptors allocated on the original device.
++	// Only CBV/SRV/UAV and sampler heaps receive ReShade virtual handles;
++	// native VKD3D descriptor tags (2/3) and pointers must pass through.
++	if (allow_original && ((handle.ptr & 0x3) > D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER ||
++		heap_index >= _descriptor_heaps.size() || _descriptor_heaps[heap_index] == nullptr))
++		return handle;
++
+ 	assert(heap_index < _descriptor_heaps.size() && _descriptor_heaps[heap_index] != nullptr);
+ 
+ 	return { _descriptor_heaps[heap_index]->_orig_base_cpu_handle.ptr + (handle.ptr & (((1ull << heap_index_start) - 1) ^ 0x7)) };
+diff --git a/source/d3d12/d3d12_impl_device.hpp b/source/d3d12/d3d12_impl_device.hpp
+index d00304f..d65de35 100644
+--- a/source/d3d12/d3d12_impl_device.hpp
++++ b/source/d3d12/d3d12_impl_device.hpp
+@@ -121,7 +121,7 @@ namespace reshade::d3d12
+ 		}
+ 
+ #if RESHADE_ADDON >= 2
+-		D3D12_CPU_DESCRIPTOR_HANDLE convert_to_original_cpu_descriptor_handle(D3D12_CPU_DESCRIPTOR_HANDLE handle) const;
++		D3D12_CPU_DESCRIPTOR_HANDLE convert_to_original_cpu_descriptor_handle(D3D12_CPU_DESCRIPTOR_HANDLE handle, bool allow_original = false) const;
+ #endif
+ 		D3D12_CPU_DESCRIPTOR_HANDLE convert_to_original_cpu_descriptor_handle(api::descriptor_table set, D3D12_DESCRIPTOR_HEAP_TYPE *type = nullptr) const;
+ 		D3D12_GPU_DESCRIPTOR_HANDLE convert_to_original_gpu_descriptor_handle(api::descriptor_table set) const;

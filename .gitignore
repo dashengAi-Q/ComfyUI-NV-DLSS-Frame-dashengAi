@@ -1,0 +1,71 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local Python environments
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+
+# Python packaging
+build/
+dist/
+*.egg-info/
+
+# Test, type-checker, and linter caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Locally generated fallback runtime data
+/outputs/
+/logs/
+/jobs/
+/temp/
+
+# Local diagnostics
+*.report.json
+*.failure.json
+*.manifest.json
+*.log
+
+# Temporary and incomplete files
+*.tmp
+*.temp
+*.part
+*.incomplete
+
+# Linux driver bridges and graphics caches (installed/generated locally)
+/bin/runtime/**/_nvngx.dll
+/bin/runtime/**/vkd3d-proton.cache*
+/bin/runtime/**/*.dxvk-cache
+
+# Linux host links, worker copy and configuration are prepared locally.
+/bin/runtime/host-linux/*
+!/bin/runtime/host-linux/dxgi.dll
+
+# Per-installation Linux worker settings written by setup.
+/linux-runtime.json
+
+# Large NVIDIA runtime binaries (~234 MB) are distributed separately via
+# Hugging Face (automatic download) + cloud drive (manual fallback).
+# This folder is the local staging area for uploading those files and must
+# never be pushed to the GitHub repository (repo size limit 50 MB).
+# Restore the files into bin/runtime/ with: python scripts/download_large_files.py
+/large_files/
+
+# Temporary one-off upload helper (contains credentials; never commit)
+/scripts/_hf_upload.py

@@ -1,0 +1,43 @@
+name: Build Linux-compatible ReShade
+
+on:
+  push:
+    paths:
+      - patches/**
+      - .github/workflows/reshade-linux.yml
+  pull_request:
+    paths:
+      - patches/**
+      - .github/workflows/reshade-linux.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: crosire/reshade
+          ref: 358c345ca2fe64f86e67c694f8379c356627adcb
+          fetch-depth: 0
+          submodules: recursive
+          path: reshade-source
+      - name: Apply native descriptor compatibility patch
+        working-directory: reshade-source
+        run: |
+          git apply --check ../patches/reshade-vkd3d-native-descriptors.patch
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git apply ../patches/reshade-vkd3d-native-descriptors.patch
+      - uses: microsoft/setup-msbuild@v2
+      - name: Build the add-on enabled DLL
+        working-directory: reshade-source
+        run: msbuild ReShade.sln /m /p:Configuration=Release /p:Platform=64-bit
+      - uses: actions/upload-artifact@v4
+        with:
+          name: reshade-linux-x64
+          path: reshade-source/bin/x64/Release/ReShade64.dll
+          if-no-files-found: error
