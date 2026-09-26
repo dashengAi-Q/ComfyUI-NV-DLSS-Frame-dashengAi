@@ -44,8 +44,13 @@ from pathlib import Path
 HF_REPO_ID = "dashengAi/ComfyUI-NV-DLSS-Frame-dashengAi-runtime"
 
 # Cloud-drive shared link (zip of the ``large_files/`` folder) used when
-# Hugging Face is not reachable.
+# Hugging Face / the mirror are not reachable.
 CLOUD_DRIVE_URL = "https://pan.quark.cn/s/c65a50478105"
+
+# HTTPS download hosts, tried in order (the mirror is reachable in mainland
+# China without a VPN). Git LFS pulls use .lfsconfig instead (also the mirror).
+HF_BASE_URL = "https://hf-mirror.com"
+HF_ORIGIN_BASE_URL = "https://huggingface.co"
 # ---------------------------------------------------------------------------
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -206,22 +211,25 @@ def ensure_one(item: dict, *, check_only: bool, allow_https: bool) -> bool:
         shutil.copy2(staged, destination)
         return True
 
-    # 2) Direct HTTPS download from Hugging Face (no git-lfs required).
+    # 2) Direct HTTPS download from Hugging Face (no git-lfs required),
+    #    trying the mirror first, then the original host.
     if allow_https and HF_REPO_ID and not HF_REPO_ID.startswith("YOUR_HF_USERNAME"):
-        url = f"https://huggingface.co/{HF_REPO_ID}/resolve/main/{rel}"
-        print(f"[FETCH]  {rel}")
-        print(f"         {url}")
-        for attempt in (1, 2):
-            try:
-                _download(url, destination)
-                if sha256_of(destination) == item["sha256"]:
-                    print(f"[DONE]   {rel}")
-                    return True
-                print(f"    SHA-256 mismatch after download (attempt {attempt}).")
-                destination.unlink(missing_ok=True)
-            except (urllib.error.URLError, OSError, ValueError) as exc:
-                print(f"    download failed (attempt {attempt}): {exc}")
-        print(f"[FAIL]   {rel}  (Hugging Face unreachable or file missing)")
+        hosts = [HF_BASE_URL, HF_ORIGIN_BASE_URL]
+        for host in hosts:
+            url = f"{host}/{HF_REPO_ID}/resolve/main/{rel}"
+            print(f"[FETCH]  {rel}")
+            print(f"         {url}")
+            for attempt in (1, 2):
+                try:
+                    _download(url, destination)
+                    if sha256_of(destination) == item["sha256"]:
+                        print(f"[DONE]   {rel}")
+                        return True
+                    print(f"    SHA-256 mismatch after download (attempt {attempt}).")
+                    destination.unlink(missing_ok=True)
+                except (urllib.error.URLError, OSError, ValueError) as exc:
+                    print(f"    download failed (attempt {attempt}): {exc}")
+        print(f"[FAIL]   {rel}  (Hugging Face / mirror unreachable or file missing)")
 
     print(f"[MISS]   {rel}")
     return False

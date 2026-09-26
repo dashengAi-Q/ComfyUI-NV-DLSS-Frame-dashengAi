@@ -148,10 +148,19 @@ $env:DLSS_FFPROBE_PATH = "C:\path\to\ffprobe.exe"
 ### Important for source clones
 
 A fresh clone contains tiny Git LFS pointer files (a few hundred bytes)
-instead of the real DLLs. Before the pointers are resolved the plugin is
-incomplete. The plugin checks on startup and fetches them automatically; you
-can also run `git lfs pull` (uses the Hugging Face endpoint configured in
-`.lfsconfig`) or `python scripts/download_large_files.py` manually.
+instead of the real DLLs. git-lfs resolves them automatically during
+`git clone` from the endpoint configured in `.lfsconfig` — by default the
+mainland-China mirror `hf-mirror.com`, which is reachable without a VPN.
+The plugin also re-checks on startup and fetches any missing file
+automatically (`python scripts/download_large_files.py` works too).
+
+If the clone fails at the LFS stage (network cannot reach the endpoint),
+re-clone with LFS smudging disabled, then let the script fetch the files:
+
+```bash
+GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/dashengAi-Q/ComfyUI-NV-DLSS-Frame-dashengAi.git
+python scripts/download_large_files.py   # mirror -> Hugging Face -> cloud-drive instructions
+```
 
 ## Large files（大文件）
 
@@ -162,16 +171,18 @@ can also run `git lfs pull` (uses the Hugging Face endpoint configured in
 | Local staging folder (8 files, ~234 MB, gitignored) | `large_files/` — used for uploading to Hugging Face / cloud drive |
 | Downloader script | `scripts/download_large_files.py` |
 
-- **Automatic (network to Hugging Face works):** `git lfs pull` on startup /
-  `python scripts/download_large_files.py`.
-- **Manual (Hugging Face unreachable):** download the cloud-drive bundle
+- **Automatic (network to the mirror or Hugging Face works):** git-lfs fetches
+  during clone/startup; `python scripts/download_large_files.py` also tries
+  `hf-mirror.com` first, then `huggingface.co`.
+- **Manual (both hosts unreachable):** download the cloud-drive bundle
   from <https://pan.quark.cn/s/c65a50478105> and extract it so that
   `bin/runtime/host/...`, `bin/runtime/dlss/...`, `bin/runtime/dlssg/...`,
   `bin/runtime/host-linux/...` are present, then verify with
   `python scripts/download_large_files.py --check`.
-- Mainland-China mirror for the Hugging Face endpoint: replace
-  `huggingface.co` with `hf-mirror.com` in `.lfsconfig`
-  (`https://hf-mirror.com/dashengAi/ComfyUI-NV-DLSS-Frame-dashengAi-runtime.git/info/lfs`).
+- The `.lfsconfig` endpoint already points at the mainland-China mirror
+  `hf-mirror.com`. Users outside China can switch it back to the original
+  host:
+  `url = https://huggingface.co/dashengAi/ComfyUI-NV-DLSS-Frame-dashengAi-runtime.git/info/lfs`.
 
 ## NVIDIA DLSS Video Upscale
 

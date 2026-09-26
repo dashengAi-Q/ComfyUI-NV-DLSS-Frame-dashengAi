@@ -1,8 +1,10 @@
 # Git LFS endpoint override: the large NVIDIA runtime binaries are stored in
-# this Hugging Face repository instead of GitHub, so the GitHub repo stays
-# under 50 MB. git-lfs reads this file and fetches objects from Hugging Face.
+# the Hugging Face repository below, so the GitHub repo stays under 50 MB.
+# git-lfs reads this file and fetches objects from the endpoint.
 #
-# To point at a mirror (mainland-China fallback), change the host to
-# https://hf-mirror.com/dashengAi/ComfyUI-NV-DLSS-Frame-dashengAi-runtime.git/info/lfs
+# The endpoint uses hf-mirror.com (the official Hugging Face mirror for
+# mainland China), which is reachable without a VPN. Users outside China can
+# switch back to the original endpoint:
+#   url = https://huggingface.co/dashengAi/ComfyUI-NV-DLSS-Frame-dashengAi-runtime.git/info/lfs
 [lfs]
-    url = https://huggingface.co/dashengAi/ComfyUI-NV-DLSS-Frame-dashengAi-runtime.git/info/lfs
+    url = https://hf-mirror.com/dashengAi/ComfyUI-NV-DLSS-Frame-dashengAi-runtime.git/info/lfs
