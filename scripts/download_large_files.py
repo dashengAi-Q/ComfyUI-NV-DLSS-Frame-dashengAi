@@ -44,8 +44,8 @@ from pathlib import Path
 HF_REPO_ID = "dashengAi/ComfyUI-NV-DLSS-Frame-dashengAi-runtime"
 
 # Cloud-drive shared link (zip of the ``large_files/`` folder) used when
-# Hugging Face is not reachable. Fill this in once you have the link.
-CLOUD_DRIVE_URL = ""
+# Hugging Face is not reachable.
+CLOUD_DRIVE_URL = "https://pan.quark.cn/s/c65a50478105"
 # ---------------------------------------------------------------------------
 
 ROOT = Path(__file__).resolve().parents[1]

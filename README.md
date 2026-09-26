@@ -165,8 +165,8 @@ can also run `git lfs pull` (uses the Hugging Face endpoint configured in
 - **Automatic (network to Hugging Face works):** `git lfs pull` on startup /
   `python scripts/download_large_files.py`.
 - **Manual (Hugging Face unreachable):** download the cloud-drive bundle
-  (link TBD) and extract it so that `bin/runtime/host/...`,
-  `bin/runtime/dlss/...`, `bin/runtime/dlssg/...`,
+  from <https://pan.quark.cn/s/c65a50478105> and extract it so that
+  `bin/runtime/host/...`, `bin/runtime/dlss/...`, `bin/runtime/dlssg/...`,
   `bin/runtime/host-linux/...` are present, then verify with
   `python scripts/download_large_files.py --check`.
 - Mainland-China mirror for the Hugging Face endpoint: replace
