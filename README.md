@@ -110,7 +110,7 @@ a cloud-drive bundle is the manual fallback (see [Large files](#large-files--大
 1. Clone the repository (ComfyUI-Manager or manually):
 
    ```bash
-   git clone https://github.com/<your-github>/ComfyUI-NV-DLSS-Frame-dashengAi.git
+   git clone https://github.com/dashengAi-Q/ComfyUI-NV-DLSS-Frame-dashengAi.git
    ```
 
    Place the folder at:
